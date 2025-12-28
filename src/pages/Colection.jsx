@@ -7,6 +7,30 @@ function Collection() {
   const dispatch = useDispatch()
   const collection = useSelector((state) => state.colection?.items || [])
   
+  // Download function
+  const handleDownload = async (src, title, type) => {
+    try {
+      const response = await fetch(src)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      
+      // File extension based on type
+      const extension = type === 'video' ? 'mp4' : type === 'gif' ? 'gif' : 'jpg'
+      link.download = `${title || 'download'}.${extension}`
+      
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      alert('downloaded sucessfull')
+    } catch (error) {
+      console.error('Download failed:', error)
+     
+    }
+  }
+  
   return (
     <div className='min-h-screen bg-gray-900 p-6'>
       
@@ -19,9 +43,7 @@ function Collection() {
             onClick={() => {
               if(window.confirm('Clear all items?')) {
                 dispatch(clearcolection())
-                toast.success("items clear sucessfull")
-              }else{
-                toast.error("clear cancel")
+                toast.success("all items clear")
               }
             }}
             className='bg-red-500 hover:bg-red-600 active:scale-95 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 shadow-lg'
@@ -75,20 +97,38 @@ function Collection() {
                 )}
               </a>
 
-              {/* Bottom Bar */}
+              {/* Bottom Bar with Download and Remove */}
               <div className='absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent'>
                 <h3 className='text-white text-sm font-medium truncate flex-1 mr-3'>
                   {item.title}
                 </h3>
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault()
-                    dispatch(removecolection(item.id))
-                  }}
-                  className='bg-red-500 hover:bg-red-600 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-200 whitespace-nowrap shadow-lg'
-                >
-                  Remove
-                </button>
+                
+                {/* Buttons */}
+                <div className='flex gap-2'>
+                  {/* Download Button */}
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handleDownload(item.src, item.title, item.type)
+                      toast.success("downloaded successfull")
+                    }}
+                    className='bg-green-500 hover:bg-green-600 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-200 whitespace-nowrap shadow-lg'
+                  >
+                    Download
+                  </button>
+                  
+                  {/* Remove Button */}
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault()
+                      dispatch(removecolection(item.id))
+                      toast.success(`${item.title} removed`)
+                    }}
+                    className='bg-red-500 hover:bg-red-600 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-200 whitespace-nowrap shadow-lg'
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
             </div>
           ))}
